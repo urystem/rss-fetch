@@ -1,0 +1,48 @@
+package main
+
+import (
+	"context"
+	"log/slog"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"rss/internal/configs"
+)
+
+func main() {
+	ctxBack := context.Background()
+	cfg := configs.Load()
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+	app, err := app.InitApp(ctxBack, cfg, logger)
+	if err != nil {
+		slog.Error(err.Error())
+		os.Exit(1)
+		return
+	}
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		if err := app.Run(ctxBack); err != nil && err != http.ErrServerClosed {
+			slog.Error("❌", " Server error:", err)
+			quit <- syscall.SIGTERM
+		}
+	}()
+	// time.Sleep(20 * time.Second)
+	// close(quit)
+	<-quit // Ждём сигнал
+	slog.Info("📦 Shutting down server...")
+
+	// Контекст с таймаутом на завершение
+	ctx, cancel := context.WithTimeout(ctxBack, 20*time.Second)
+	defer cancel()
+
+	if err := app.Shutdown(ctx); err != nil {
+		slog.Error("❌", " Server forced to shutdown: %v", err)
+	}
+	slog.Info("✅ Server exited properly")
+}
