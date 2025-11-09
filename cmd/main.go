@@ -21,6 +21,7 @@ func init() {
 func main() {
 	flag.Usage = usage
 	flag.Parse()
+
 	ctxBack := context.Background()
 	cfg := configs.Load()
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
@@ -38,12 +39,16 @@ func main() {
 		if err := app.Run(ctxBack); err != nil {
 			slog.Error("❌", " Server error:", err)
 			quit <- syscall.SIGTERM
+		} else {
+			close(quit)
 		}
-		close(quit)
 	}()
 	// time.Sleep(20 * time.Second)
 	// close(quit)
-	<-quit // Ждём сигнал
+	_, ok := <-quit // Ждём сигнал
+	if !ok {
+		return
+	}
 	slog.Info("📦 Shutting down server...")
 
 	if err := app.Shutdown(ctxBack); err != nil {

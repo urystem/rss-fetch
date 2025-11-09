@@ -59,7 +59,6 @@ func (app *myApp) Run(ctx context.Context) error {
 
 func (app *myApp) Shutdown(ctx context.Context) error {
 	app.cancel()
-	app.db.Stopper(ctx)
-	app.db.CloseDB()
+	time.Sleep(5 * time.Second)
 	return nil
 }

@@ -1,6 +1,7 @@
 package ticker
 
 import (
+	"context"
 	"fmt"
 	"time"
 )
@@ -9,6 +10,8 @@ func (t *ticker) startTick(signal <-chan struct{}, interval time.Duration) {
 	tick := time.NewTicker(interval)
 	defer tick.Stop()
 	defer close(t.jobs)
+	defer t.db.Stopper(context.Background())
+	defer fmt.Println("stopping")
 	for {
 		select {
 		case <-t.ctx.Done():
@@ -27,7 +30,9 @@ func (t *ticker) startTick(signal <-chan struct{}, interval time.Duration) {
 				go t.workers.ResizeWorker(stg.Worker)
 			}
 			if interval != stg.Interval {
-				tick.Reset(stg.Interval)
+				t.logger.Info("ticker", "interval changed from", interval, "to", stg.Interval)
+				interval = stg.Interval
+				tick.Reset(interval)
 			}
 		case <-tick.C:
 			t.logger.Info("fetching")

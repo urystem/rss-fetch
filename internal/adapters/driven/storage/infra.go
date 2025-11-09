@@ -32,5 +32,4 @@ func InitDB(ctx context.Context, cfg configs.DBConfig) (outbound.PostgresInter, 
 
 func (p *poolDB) CloseDB() {
 	p.Close()
-
 }

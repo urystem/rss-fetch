@@ -44,6 +44,7 @@ type PsqlForTicker interface {
 	// ListRssWithLastUpdated(ctx context.Context, n uint) ([]domain.FeedForGetReq, error)
 	Listen(ctx context.Context) (<-chan struct{}, error)
 	GetSettings(ctx context.Context) (*domain.Setting, error)
+	Stopper(ctx context.Context) error
 }
 
 type psqlRssFeedForWorkers interface {

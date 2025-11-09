@@ -50,11 +50,10 @@ func (p *poolDB) GetSettings(ctx context.Context) (*domain.Setting, error) {
 		WHERE mine = TRUE`
 
 	s := new(domain.Setting)
-
 	return s, p.QueryRow(ctx, query).Scan(
-		s.IsRunning,
-		s.Worker,
-		s.Interval,
+		&s.IsRunning,
+		&s.Worker,
+		&s.Interval,
 	)
 }
 
@@ -64,22 +63,24 @@ func (p *poolDB) Stopper(ctx context.Context) error {
         SET is_running = FALSE
         WHERE mine = TRUE`)
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 	if res.RowsAffected() == 0 {
 		return domain.ErrNotAffected
 	}
+	fmt.Println("stoppedddddddddddddddddddd")
 	return nil
 }
 
 func (p *poolDB) SetInterval(ctx context.Context, d time.Duration) (time.Duration, error) {
-	var oldStr string
+	var oldStr time.Duration
 	const query = "UPDATE setting SET interval=$1 WHERE mine = TRUE RETURNING OLD.interval"
-	err := p.QueryRow(ctx, query, d.String()).Scan(&oldStr)
+	err := p.QueryRow(ctx, query, d).Scan(&oldStr)
 	if err != nil {
 		return 0, err
 	}
-	return time.ParseDuration(oldStr)
+	return oldStr, nil
 }
 
 func (p *poolDB) ResizeWorker(ctx context.Context, workers uint) (uint, error) {

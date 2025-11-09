@@ -5,5 +5,5 @@ import "errors"
 var (
 	ErrConflict    = errors.New("ErrConflict")
 	ErrNotAffected = errors.New("ErrNotAffected")
-	ErrHelp        = errors.New("error usage")
+	ErrFlag        = errors.New("error usage")
 )

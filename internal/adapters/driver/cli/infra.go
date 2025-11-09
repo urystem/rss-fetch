@@ -2,12 +2,14 @@ package cli
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"rss/internal/domain"
 	"rss/internal/ports/inbound"
 )
 
 type cli struct {
+	ctx context.Context
 	use inbound.UseCasePsql
 }
 
@@ -18,31 +20,34 @@ func BuildCli(use inbound.UseCasePsql) inbound.CliInter {
 }
 
 func (c *cli) Run(ctx context.Context) error {
-	if len(os.Args) < 2 {
-		return domain.ErrHelp
+	if c.ctx != nil {
+		return fmt.Errorf("already used cli")
 	}
-	switch os.Args[1] {
+	c.ctx = ctx
+	if len(os.Args) < 2 {
+		return domain.ErrFlag
+	}
+	//for flag.Parse we need to cut the first element of os.Args)
+	command := os.Args[1]
+	os.Args = os.Args[1:]
+	switch command {
 	case "fetch":
 		return c.use.Starter(ctx)
 	case "add":
 		return c.add()
 	case "set-interval":
-		return nil
+		return c.setInterval()
 	case "set-workers":
-		return nil
+		return c.setWorker()
 	case "list":
-		return nil
+		return c.list()
 	case "delete":
-		return nil
+		return c.delete()
 	case "articles":
-		return nil
+		return c.showArticles()
 	case "stop-fetch":
 		return c.use.Stopper(ctx)
 	default:
-		return domain.ErrHelp
+		return domain.ErrFlag
 	}
-}
-
-func (c *cli) add() error {
-	return nil
 }

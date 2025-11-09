@@ -9,14 +9,17 @@ import (
 
 func (p *poolDB) ShowArticles(ctx context.Context, name string, n uint) ([]domain.Article, error) {
 	const query = `
-        UPDATE articles a
-        SET last_seen = NOW()
-        FROM feeds f
-        WHERE a.feed_id = f.id
-          AND f.name = $1
-        ORDER BY a.last_seen ASC NULLS FIRST, a.published_at DESC
-        LIMIT $2
-        RETURNING a.id, a.title, a.link, a.description, a.published_at, a.created_at, a.last_seen`
+    UPDATE articles a
+		SET last_seen = NOW()
+WHERE a.id IN (
+    SELECT a2.id
+    FROM articles a2
+    JOIN feeds f ON a2.feed_id = f.id
+    WHERE f.name = $1
+    ORDER BY a2.last_seen ASC NULLS FIRST, a2.published_at DESC
+    LIMIT $2
+)
+RETURNING a.id, a.title, a.link, a.description, a.published_at, a.created_at, a.last_seen;`
 
 	rows, err := p.Query(ctx, query, name, n)
 	if err != nil {

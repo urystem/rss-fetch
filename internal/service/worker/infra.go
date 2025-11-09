@@ -50,7 +50,11 @@ func (w *workersDo) ResizeWorker(count int) {
 	}
 	w.workerMu.Lock()
 	defer w.workerMu.Unlock()
-	diff := count - len(w.controller)
+	old := len(w.controller)
+	diff := count - old
+	if diff == 0 {
+		return
+	}
 	if diff > 0 { //add
 		for range diff {
 			w.addWorker()
@@ -60,6 +64,7 @@ func (w *workersDo) ResizeWorker(count int) {
 			w.delWorker()
 		}
 	}
+	w.logger.Info("worker", "resized from", old, "to", count)
 }
 
 func (w *workersDo) StopAll() {

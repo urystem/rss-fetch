@@ -29,12 +29,13 @@ func BuildBridge(db outbound.PsqlForCli, tick inbound.TickController, work inbou
 func (p *psqlUseCase) Starter(ctxMain context.Context) error {
 	ctx, cancel := context.WithCancelCause(ctxMain)
 	defer cancel(fmt.Errorf("error build"))
-	defer p.Stopper(ctx)
 
 	err := p.db.Starter(ctx)
 	if err != nil {
 		return err
 	}
+	defer p.Stopper(ctxMain)
+
 	countWorker := p.cfg.GetWorkerCount()
 	interval := p.cfg.GetInterval()
 	err = p.db.SetAndGetSettings(ctx, &countWorker, &interval)
@@ -50,6 +51,8 @@ func (p *psqlUseCase) Starter(ctxMain context.Context) error {
 		return err
 	}
 	<-ctx.Done()
+	fmt.Println("stop please")
+	fmt.Println(ctx.Err())
 	return ctx.Err()
 }
 
