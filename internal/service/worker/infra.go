@@ -14,7 +14,7 @@ type workersDo struct {
 	ctx        context.Context
 	controller []chan struct{}
 	workerMu   sync.RWMutex
-	logger     slog.Logger
+	logger     *slog.Logger
 	db         outbound.PsqlForWorkers
 	rss        outbound.RssHttp
 	jobs       <-chan *domain.FeedForGetReq
@@ -25,7 +25,7 @@ type WorkerResizeForTicker interface {
 	StopAll()
 }
 
-func BuildWorker(logg slog.Logger, db outbound.PsqlForWorkers, rss outbound.RssHttp) inbound.Workers {
+func BuildWorker(logg *slog.Logger, db outbound.PsqlForWorkers, rss outbound.RssHttp) inbound.Workers {
 	return &workersDo{
 		logger: logg,
 		db:     db,

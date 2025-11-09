@@ -2,6 +2,8 @@ package usecase
 
 import (
 	"context"
+	"fmt"
+	"rss/internal/configs"
 	"rss/internal/domain"
 	"rss/internal/ports/inbound"
 	"rss/internal/ports/outbound"
@@ -9,21 +11,46 @@ import (
 )
 
 type psqlUseCase struct {
-	db outbound.PsqlForCli
+	db   outbound.PsqlForCli
+	tick inbound.TickController
+	work inbound.WorkerForCLI
+	cfg  configs.WorkerInter
 }
 
-func BuildBridge(db outbound.PsqlForCli) inbound.UseCasePsql {
+func BuildBridge(db outbound.PsqlForCli, tick inbound.TickController, work inbound.WorkerForCLI, cfg configs.WorkerInter) inbound.UseCasePsql {
 	return &psqlUseCase{
-		db: db,
+		db:   db,
+		tick: tick,
+		work: work,
+		cfg:  cfg,
 	}
 }
 
-func (p *psqlUseCase) Starter(ctx context.Context) error {
-	return p.db.Starter(ctx)
-}
+func (p *psqlUseCase) Starter(ctxMain context.Context) error {
+	ctx, cancel := context.WithCancelCause(ctxMain)
+	defer cancel(fmt.Errorf("error build"))
+	defer p.Stopper(ctx)
 
-func (p *psqlUseCase) SetAndGetSettings(ctx context.Context, workerCount *uint, intrv *time.Duration) error {
-	return p.db.SetAndGetSettings(ctx, workerCount, intrv)
+	err := p.db.Starter(ctx)
+	if err != nil {
+		return err
+	}
+	countWorker := p.cfg.GetWorkerCount()
+	interval := p.cfg.GetInterval()
+	err = p.db.SetAndGetSettings(ctx, &countWorker, &interval)
+	if err != nil {
+		return err
+	}
+	jobs, err := p.tick.Start(ctx, cancel, *interval)
+	if err != nil {
+		return err
+	}
+	err = p.work.Start(ctx, int(*countWorker), jobs)
+	if err != nil {
+		return err
+	}
+	<-ctx.Done()
+	return ctx.Err()
 }
 
 func (p *psqlUseCase) ResizeWorker(ctx context.Context, workers uint) (uint, error) {

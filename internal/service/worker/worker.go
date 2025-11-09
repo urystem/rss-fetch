@@ -2,7 +2,7 @@ package worker
 
 func (w *workersDo) delWorker() {
 	//mutex must been unlocked
-	lastInd := len(w.controller)
+	lastInd := len(w.controller) - 1
 	last := w.controller[lastInd]
 	close(last)
 	w.controller = w.controller[:lastInd]
@@ -38,9 +38,5 @@ func (w *workersDo) workerFunc(quit <-chan struct{}) {
 
 func (w *workersDo) stopCtx() {
 	<-w.ctx.Done()
-	w.workerMu.Lock()
-	defer w.workerMu.Unlock()
-	for range len(w.controller) {
-		w.delWorker()
-	}
+	w.StopAll()
 }

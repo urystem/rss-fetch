@@ -7,3 +7,8 @@ CREATE TABLE IF NOT EXISTS feeds (
     name TEXT UNIQUE NOT NULL,
     url TEXT NOT NULL
 );
+
+
+INSERT INTO feeds (name, url) VALUES
+('tech-crunch', 'https://techcrunch.com/feed/'),
+('hacker-news', 'https://news.ycombinator.com/rss');

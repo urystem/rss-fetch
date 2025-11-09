@@ -2,17 +2,25 @@ package main
 
 import (
 	"context"
+	"flag"
+	"fmt"
 	"log/slog"
-	"net/http"
 	"os"
 	"os/signal"
 	"rss/internal/bootstrap"
 	"rss/internal/configs"
 	"syscall"
-	"time"
+
+	"github.com/subosito/gotenv"
 )
 
+func init() {
+	gotenv.Load()
+}
+
 func main() {
+	flag.Usage = usage
+	flag.Parse()
 	ctxBack := context.Background()
 	cfg := configs.Load()
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
@@ -27,22 +35,36 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
-		if err := app.Run(ctxBack); err != nil && err != http.ErrServerClosed {
+		if err := app.Run(ctxBack); err != nil {
 			slog.Error("❌", " Server error:", err)
 			quit <- syscall.SIGTERM
 		}
+		close(quit)
 	}()
 	// time.Sleep(20 * time.Second)
 	// close(quit)
 	<-quit // Ждём сигнал
 	slog.Info("📦 Shutting down server...")
 
-	// Контекст с таймаутом на завершение
-	ctx, cancel := context.WithTimeout(ctxBack, 20*time.Second)
-	defer cancel()
-
-	if err := app.Shutdown(ctx); err != nil {
+	if err := app.Shutdown(ctxBack); err != nil {
 		slog.Error("❌", " Server forced to shutdown: %v", err)
 	}
 	slog.Info("✅ Server exited properly")
+}
+
+func usage() {
+	fmt.Println(`
+Usage:
+
+    rsshub COMMAND [OPTIONS]
+
+Common Commands:
+
+    add             Add new RSS feed
+    set-interval    Set RSS fetch interval
+    set-workers     Set number of workers
+    list            List available RSS feeds
+    delete          Delete RSS feed
+    articles        Show latest articles
+    fetch           Start background process that periodically fetches and processes RSS feeds using a worker pool`)
 }

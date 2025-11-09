@@ -10,6 +10,7 @@ type PostgresInter interface {
 	PsqlForCli
 	PsqlRssFeed
 	PsqlArticles
+	CloseDB()
 }
 
 type psqlSettingForCli interface {
@@ -17,7 +18,7 @@ type psqlSettingForCli interface {
 	ResizeWorker(ctx context.Context, workers uint) (uint, error)
 	Starter(ctx context.Context) error
 	Stopper(ctx context.Context) error
-	SetAndGetSettings(ctx context.Context, workerCount *uint, intrv *time.Duration) error
+	SetAndGetSettings(ctx context.Context, workerCount **uint, intrv **time.Duration) error
 }
 
 type PsqlForCli interface {

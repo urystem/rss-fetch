@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"fmt"
 	"rss/internal/domain"
 	"time"
 )
@@ -23,9 +24,10 @@ func (p *poolDB) Starter(ctx context.Context) error {
 	return nil
 }
 
-func (p *poolDB) SetAndGetSettings(ctx context.Context, workerCount *uint, intrv *time.Duration) error {
-	var w uint
-	var i time.Duration
+func (p *poolDB) SetAndGetSettings(ctx context.Context, workerCount **uint, intrv **time.Duration) error {
+	if workerCount == nil || intrv == nil {
+		return fmt.Errorf("invalid pointer for set settings, %v,%v", workerCount, intrv)
+	}
 
 	err := p.QueryRow(ctx, `
         UPDATE setting
@@ -34,20 +36,10 @@ func (p *poolDB) SetAndGetSettings(ctx context.Context, workerCount *uint, intrv
             interval = COALESCE($2, interval)
         WHERE mine = TRUE AND is_running = TRUE
         RETURNING workers, interval
-    `, workerCount, intrv).Scan(&w, &i)
-
+    `, *workerCount, *intrv).Scan(workerCount, intrv)
 	if err != nil {
 		return err
 	}
-
-	// если нужно — обновляем входные параметры
-	if workerCount != nil {
-		*workerCount = w
-	}
-	if intrv != nil {
-		*intrv = i
-	}
-
 	return nil
 }
 

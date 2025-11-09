@@ -10,7 +10,6 @@ type UseCasePsql interface {
 	Starter(ctx context.Context) error
 	Stopper(ctx context.Context) error
 
-	SetAndGetSettings(ctx context.Context, workerCount *uint, intrv *time.Duration) error
 	ResizeWorker(ctx context.Context, workers uint) (uint, error)
 	SetInterval(ctx context.Context, d time.Duration) (time.Duration, error)
 
