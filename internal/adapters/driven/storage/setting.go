@@ -66,7 +66,7 @@ func (p *poolDB) GetSettings(ctx context.Context) (*domain.Setting, error) {
 	)
 }
 
-func (p *poolDB) Shutdown(ctx context.Context) error {
+func (p *poolDB) Stopper(ctx context.Context) error {
 	res, err := p.Exec(ctx, `
         UPDATE setting
         SET is_running = FALSE

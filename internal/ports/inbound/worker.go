@@ -6,11 +6,11 @@ import (
 )
 
 type Workers interface {
-	Start(ctx context.Context, workers int, jobs <-chan *domain.FeedForGetReq) error
 	StopAll()
-	WorkerResize
+	WorkerForCLI
+	ResizeWorker(count int)
 }
 
-type WorkerResize interface {
-	ResizeWorker(count int)
+type WorkerForCLI interface {
+	Start(ctx context.Context, workers int, jobs <-chan *domain.FeedForGetReq) error
 }

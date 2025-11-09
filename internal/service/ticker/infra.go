@@ -7,6 +7,7 @@ import (
 	"rss/internal/domain"
 	"rss/internal/ports/inbound"
 	"rss/internal/ports/outbound"
+	"rss/internal/service/worker"
 	"time"
 )
 
@@ -15,10 +16,10 @@ type ticker struct {
 	interval time.Duration
 	jobs     chan *domain.FeedForGetReq
 	db       outbound.PsqlForTicker
-	workers  inbound.WorkerResize
+	workers  worker.WorkerResizeForTicker
 }
 
-func BuildTicker(db outbound.PsqlForTicker, workers inbound.WorkerResize) inbound.TickController {
+func BuildTicker(db outbound.PsqlForTicker, workers worker.WorkerResizeForTicker) inbound.TickController {
 	return &ticker{
 		db:      db,
 		workers: workers,
@@ -54,7 +55,12 @@ func (t *ticker) startTick(signal <-chan struct{}) {
 				slog.Error("ticker", "get setting", err)
 				return
 			}
-			go t.workers.ResizeWorker(stg.Worker)
+			if !stg.IsRunning {
+				t.workers.StopAll()
+				return
+			} else {
+				go t.workers.ResizeWorker(stg.Worker)
+			}
 			if t.interval != stg.Interval {
 				tick.Reset(stg.Interval)
 			}

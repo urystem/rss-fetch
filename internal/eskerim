@@ -1,0 +1,18 @@
+Use case вызывает только driven adapters
+
+Inbound adapters вызывают use case
+
+
+[CLI/HTTP/Telegram]
+        │
+        ▼
+   [UseCase Layer] ──▶ FetchFeeds
+        │                AddFeed
+        │                DeleteFeed
+        ▼
+   [Service Layer] ───▶ FeedService
+        ▼
+   [Outbound Layer] ─▶ Postgres, HTTP, Redis, etc.
+
+
+   

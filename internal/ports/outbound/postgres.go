@@ -7,20 +7,16 @@ import (
 )
 
 type PostgresInter interface {
-	PsqlSetting
+	PsqlForCli
 	PsqlRssFeed
 	PsqlArticles
-}
-
-type PsqlSetting interface {
-	psqlSettingForCli
-	Shutdown(ctx context.Context) error
 }
 
 type psqlSettingForCli interface {
 	SetInterval(ctx context.Context, d time.Duration) (time.Duration, error)
 	ResizeWorker(ctx context.Context, workers uint) (uint, error)
 	Starter(ctx context.Context) error
+	Stopper(ctx context.Context) error
 	SetAndGetSettings(ctx context.Context, workerCount *uint, intrv *time.Duration) error
 }
 

@@ -20,6 +20,11 @@ type workersDo struct {
 	jobs       <-chan *domain.FeedForGetReq
 }
 
+type WorkerResizeForTicker interface {
+	ResizeWorker(count int)
+	StopAll()
+}
+
 func BuildWorker(logg slog.Logger, db outbound.PsqlForWorkers, rss outbound.RssHttp) inbound.Workers {
 	return &workersDo{
 		logger: logg,
