@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"errors"
+	"log"
 	"rss/internal/domain"
 
 	"github.com/jackc/pgx/v5/pgconn"
@@ -105,33 +106,65 @@ func (p *poolDB) DeleteRssFeed(ctx context.Context, name string) error {
 
 	return nil
 }
-func (p *poolDB) ListRssWithLastUpdated(ctx context.Context, n uint) ([]domain.Feed, error) {
-	const query = `
-        SELECT id, name, url, created_at, updated_at
-        FROM feeds
-        ORDER BY updated_at ASC
-        LIMIT $1`
 
-	rows, err := p.Query(ctx, query, n)
+// func (p *poolDB) ListRssWithLastUpdated(ctx context.Context) ([]domain.FeedForGetReq, error) {
+// 	const query = `
+//         SELECT id, url
+//         FROM feeds
+//         ORDER BY updated_at ASC`
+
+// 	rows, err := p.Query(ctx, query)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	defer rows.Close()
+
+// 	var feeds []domain.FeedForGetReq
+// 	for rows.Next() {
+// 		var f domain.FeedForGetReq
+// 		if err := rows.Scan(&f.ID, &f.Url); err != nil {
+// 			return nil, err
+// 		}
+// 		feeds = append(feeds, f)
+// 	}
+
+//		if rows.Err() != nil {
+//			return nil, rows.Err()
+//		}
+//		return feeds, nil
+//	}
+func (p *poolDB) ListRssWithLastUpdatedChan(ctx context.Context) (<-chan *domain.FeedForGetReq, error) {
+	out := make(chan *domain.FeedForGetReq)
+
+	rows, err := p.Query(ctx, `
+		SELECT id, url
+		FROM feeds
+		ORDER BY updated_at ASC
+	`)
 	if err != nil {
+		close(out)
 		return nil, err
 	}
-	defer rows.Close()
 
-	feeds := make([]domain.Feed, 0, n)
-	for rows.Next() {
-		var f domain.Feed
-		if err := rows.Scan(&f.ID, &f.Name, &f.Url, &f.Created, &f.Updated); err != nil {
-			return nil, err
+	go func() {
+		defer close(out)
+		defer rows.Close()
+
+		for rows.Next() {
+			var f domain.FeedForGetReq
+			if err := rows.Scan(&f.ID, &f.Url); err != nil {
+				log.Println("scan error:", err)
+				continue
+			}
+			select {
+			case out <- &f:
+			case <-ctx.Done():
+				return
+			}
 		}
-		feeds = append(feeds, f)
-	}
+	}()
 
-	if rows.Err() != nil {
-		return nil, rows.Err()
-	}
-
-	return feeds, nil
+	return out, nil
 }
 
 // базар жоқ

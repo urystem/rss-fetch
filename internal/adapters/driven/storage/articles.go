@@ -47,7 +47,7 @@ func (p *poolDB) ShowArticles(ctx context.Context, name string, n uint) ([]domai
 	return articles, nil
 }
 
-func (p *poolDB) InsertArticles(ctx context.Context, feedID string, articles []domain.Article) error {
+func (p *poolDB) InsertArticles(ctx context.Context, feedID string, articles []domain.RSSItem) error {
 	if len(articles) == 0 {
 		return nil
 	}
@@ -58,7 +58,7 @@ func (p *poolDB) InsertArticles(ctx context.Context, feedID string, articles []d
             INSERT INTO articles (title, link, description, published_at, feed_id)
             VALUES ($1, $2, $3, $4, $5)
             ON CONFLICT (link) DO NOTHING`,
-			a.Title, a.Link, a.Description, a.PublishedAt, feedID)
+			a.Title, a.Link, a.Description, a.PubDate, feedID)
 	}
 
 	br := p.SendBatch(ctx, batch)

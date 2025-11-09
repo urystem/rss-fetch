@@ -6,6 +6,7 @@ type configs struct {
 }
 type ConfigInter interface {
 	GetDBConfig() DBConfig
+	GetWorkerCfg() WorkerInter
 }
 
 func Load() ConfigInter {

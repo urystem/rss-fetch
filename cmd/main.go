@@ -6,17 +6,17 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"rss/internal/bootstrap"
+	"rss/internal/configs"
 	"syscall"
 	"time"
-
-	"rss/internal/configs"
 )
 
 func main() {
 	ctxBack := context.Background()
 	cfg := configs.Load()
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
-	app, err := app.InitApp(ctxBack, cfg, logger)
+	app, err := bootstrap.InitApp(ctxBack, cfg, logger)
 	if err != nil {
 		slog.Error(err.Error())
 		os.Exit(1)

@@ -5,9 +5,13 @@ import (
 )
 
 type Feed struct {
-	ID      string
+	FeedForGetReq
 	Name    string
-	Url     string
 	Created time.Time
 	Updated time.Time
+}
+
+type FeedForGetReq struct {
+	ID  string //for insert
+	Url string //for get
 }

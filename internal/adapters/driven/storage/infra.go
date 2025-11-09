@@ -29,3 +29,4 @@ func InitDB(ctx context.Context, cfg configs.DBConfig) (outbound.PostgresInter, 
 	}
 	return &poolDB{pool}, pool.Ping(ctx)
 }
+

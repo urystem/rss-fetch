@@ -1,7 +1,8 @@
 package cli
 
-type cli struct{
-
+type cli struct {
 }
 
-func BuildCli() 
+func BuildCli() any {
+	return nil
+}
