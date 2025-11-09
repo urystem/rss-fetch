@@ -27,17 +27,21 @@ type myApp struct {
 	cfg     configs.WorkerInter
 }
 
-func InitApp(ctx context.Context, cfg configs.ConfigInter, logger *slog.Logger) (inbound.AppInter, error) {
+func InitApp(ctxMain context.Context, cfg configs.ConfigInter, logger *slog.Logger) (inbound.AppInter, error) {
+	ctx, cancel := context.WithCancel(ctxMain)
 	myDB, err := storage.InitDB(ctx, cfg.GetDBConfig())
 	if err != nil {
+		cancel()
 		return nil, err
 	}
 	rss := rss.BuildRss(5 * time.Second)
 	work := worker.BuildWorker(logger, myDB, rss)
-	tick := ticker.BuildTicker(logger, myDB, work)
+	tick := ticker.BuildTicker(ctx, cancel, logger, myDB, work)
 	use := usecase.BuildBridge(myDB, tick, work, cfg.GetWorkerCfg())
 	cli := cli.BuildCli(use)
 	return &myApp{
+		ctx:     ctx,
+		cancel:  cancel,
 		db:      myDB,
 		logger:  logger,
 		workers: work,
@@ -47,18 +51,15 @@ func InitApp(ctx context.Context, cfg configs.ConfigInter, logger *slog.Logger) 
 	}, nil
 }
 
-func (app *myApp) Run(ctx context.Context) error {
-	defer app.Shutdown(ctx)
-	if app.ctx != nil {
-		return fmt.Errorf("already running")
-	}
-	app.ctx, app.cancel = context.WithCancel(ctx)
-
+func (app *myApp) Run() error {
+	// defer app.Shutdown(ctx)
 	return app.cli.Run(app.ctx)
 }
 
 func (app *myApp) Shutdown(ctx context.Context) error {
 	app.cancel()
-	time.Sleep(5 * time.Second)
+	app.tick.Stop(ctx)
+	app.db.CloseDB()
+	fmt.Println("db closed")
 	return nil
 }

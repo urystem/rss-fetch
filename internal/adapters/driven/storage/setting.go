@@ -63,13 +63,11 @@ func (p *poolDB) Stopper(ctx context.Context) error {
         SET is_running = FALSE
         WHERE mine = TRUE`)
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 	if res.RowsAffected() == 0 {
 		return domain.ErrNotAffected
 	}
-	fmt.Println("stoppedddddddddddddddddddd")
 	return nil
 }
 

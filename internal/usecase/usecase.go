@@ -42,7 +42,7 @@ func (p *psqlUseCase) Starter(ctxMain context.Context) error {
 	if err != nil {
 		return err
 	}
-	jobs, err := p.tick.Start(ctx, cancel, *interval)
+	jobs, err := p.tick.Start(*interval)
 	if err != nil {
 		return err
 	}
@@ -51,8 +51,6 @@ func (p *psqlUseCase) Starter(ctxMain context.Context) error {
 		return err
 	}
 	<-ctx.Done()
-	fmt.Println("stop please")
-	fmt.Println(ctx.Err())
 	return ctx.Err()
 }
 

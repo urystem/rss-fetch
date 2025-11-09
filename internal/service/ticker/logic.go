@@ -1,17 +1,16 @@
 package ticker
 
 import (
-	"context"
 	"fmt"
 	"time"
 )
 
 func (t *ticker) startTick(signal <-chan struct{}, interval time.Duration) {
 	tick := time.NewTicker(interval)
+	defer fmt.Println("ticker stopped")
 	defer tick.Stop()
+	defer fmt.Println("channel closed")
 	defer close(t.jobs)
-	defer t.db.Stopper(context.Background())
-	defer fmt.Println("stopping")
 	for {
 		select {
 		case <-t.ctx.Done():
@@ -23,8 +22,8 @@ func (t *ticker) startTick(signal <-chan struct{}, interval time.Duration) {
 				return
 			}
 			if !stg.IsRunning {
-				t.cancelMain(fmt.Errorf("stopped by foreign command"))
-				t.workers.StopAll()
+				t.cancel()
+				t.logger.Info("stop-fetch")
 				return
 			} else {
 				go t.workers.ResizeWorker(stg.Worker)

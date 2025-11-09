@@ -7,5 +7,6 @@ import (
 )
 
 type TickController interface {
-	Start(ctx context.Context, cancelMain context.CancelCauseFunc, inter time.Duration) (<-chan *domain.FeedForGetReq, error)
+	Start(inter time.Duration) (<-chan *domain.FeedForGetReq, error)
+	Stop(ctx context.Context)
 }

@@ -36,25 +36,20 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
-		if err := app.Run(ctxBack); err != nil {
-			slog.Error("❌", " Server error:", err)
+		if err := app.Run(); err != nil && err != context.Canceled {
+			slog.Error("❌", " program error:", err)
 			quit <- syscall.SIGTERM
 		} else {
-			close(quit)
+			quit <- syscall.SIGABRT
 		}
 	}()
 	// time.Sleep(20 * time.Second)
 	// close(quit)
-	_, ok := <-quit // Ждём сигнал
-	if !ok {
-		return
-	}
-	slog.Info("📦 Shutting down server...")
-
+	<-quit // Ждём сигнал
 	if err := app.Shutdown(ctxBack); err != nil {
-		slog.Error("❌", " Server forced to shutdown: %v", err)
+		slog.Error("❌", " program forced to shutdown: %v", err)
 	}
-	slog.Info("✅ Server exited properly")
+	slog.Info("✅ program exited properly")
 }
 
 func usage() {
@@ -71,5 +66,6 @@ Common Commands:
     list            List available RSS feeds
     delete          Delete RSS feed
     articles        Show latest articles
-    fetch           Start background process that periodically fetches and processes RSS feeds using a worker pool`)
+    fetch           Start background process that periodically fetches and processes RSS feeds using a worker pool
+	stop-fetch      Stop proccess`)
 }

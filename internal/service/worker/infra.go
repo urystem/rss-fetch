@@ -68,6 +68,7 @@ func (w *workersDo) ResizeWorker(count int) {
 }
 
 func (w *workersDo) StopAll() {
+	defer w.logger.Info("stopped all workers")
 	w.workerMu.Lock()
 	defer w.workerMu.Unlock()
 	for range len(w.controller) {

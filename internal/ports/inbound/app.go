@@ -5,6 +5,6 @@ import (
 )
 
 type AppInter interface {
-	Run(context.Context) error
+	Run() error
 	Shutdown(ctx context.Context) error
 }
