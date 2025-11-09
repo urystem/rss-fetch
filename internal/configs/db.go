@@ -22,10 +22,6 @@ type DBConfig interface {
 func initDBConfig() dbConfig {
 	dbConf := dbConfig{}
 	dbConf.host = mustGetEnvString("POSTGRES_HOST")
-	if dbConf.host == "db" {
-		// для внешнего подключения используем localhost
-		dbConf.host = "localhost"
-	}
 	temPort := mustGetEnvInt("POSTGRES_PORT")
 	if temPort < 0 || math.MaxUint16 < temPort {
 		panic("invalid port psql")

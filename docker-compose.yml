@@ -1,4 +1,13 @@
 services:
+  rss:
+    build: .
+    environment:
+      POSTGRES_HOST: db
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
   db:
     image: postgres:alpine3.22
     container_name: rss_db
