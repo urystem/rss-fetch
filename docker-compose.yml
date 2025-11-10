@@ -15,9 +15,9 @@ services:
       POSTGRES_HOST: db
     env_file:
       - .env
+    entrypoint: ["/app/rss", "fetch"]
     depends_on:
       - migrate
-      - builder
   db:
     image: postgres:alpine3.22
     container_name: rss_db

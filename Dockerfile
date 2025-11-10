@@ -12,7 +12,9 @@ RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w -extldflags '-static'" -o 
 
 FROM scratch
 
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+
 WORKDIR /app
+
 COPY --from=builder /app/rss .
 
-ENTRYPOINT ["/app/rss", "fetch"]

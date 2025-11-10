@@ -10,7 +10,13 @@ import (
 	"rss/internal/bootstrap"
 	"rss/internal/configs"
 	"syscall"
+
+	"github.com/subosito/gotenv"
 )
+
+func init() {
+	gotenv.Load()
+}
 
 func main() {
 	flag.Usage = usage
@@ -23,19 +29,17 @@ func main() {
 	if err != nil {
 		slog.Error(err.Error())
 		os.Exit(1)
-		return
 	}
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
-		if err := app.Run(); err != nil && err != context.Canceled {
+		if err := app.Run(); err != nil {
 			slog.Error("❌", " program error:", err)
-			quit <- syscall.SIGTERM
-		} else {
-			quit <- syscall.SIGABRT
+			defer os.Exit(1)
 		}
+		quit <- syscall.SIGABRT
 	}()
 	// time.Sleep(20 * time.Second)
 	// close(quit)

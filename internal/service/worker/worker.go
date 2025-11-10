@@ -1,5 +1,7 @@
 package worker
 
+import "log/slog"
+
 func (w *workersDo) delWorker() {
 	//mutex must been unlocked
 	lastInd := len(w.controller) - 1
@@ -26,11 +28,13 @@ func (w *workersDo) workerFunc(quit <-chan struct{}) {
 			}
 			items, err := w.rss.GetRss(w.ctx, job.Url)
 			if err != nil {
-				return
+				w.logger.Error("worker", "get rss", err)
+				continue
 			}
 			err = w.db.InsertArticles(w.ctx, job.ID, items)
 			if err != nil {
-				return
+				slog.Error("worker", "insert", err)
+				continue
 			}
 		}
 	}
