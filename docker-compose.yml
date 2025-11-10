@@ -1,13 +1,23 @@
 services:
+  builder:
+    image: golang:1.24.4-alpine3.22
+    working_dir: /app
+    env_file:
+      - .env
+    volumes:
+      - .:/app       # текущая папка хоста монтируется в /app
+    command: >
+      sh -c "CGO_ENABLED=0 GOOS=linux go build -ldflags='-s -w -extldflags \"-static\"' -o rss cmd/main.go"
   rss:
-    build: .
+    build: 
+      dockerfile: Dockerfile
     environment:
       POSTGRES_HOST: db
     env_file:
       - .env
     depends_on:
-      db:
-        condition: service_healthy
+      - migrate
+      - builder
   db:
     image: postgres:alpine3.22
     container_name: rss_db

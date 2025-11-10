@@ -10,13 +10,7 @@ import (
 	"rss/internal/bootstrap"
 	"rss/internal/configs"
 	"syscall"
-
-	"github.com/subosito/gotenv"
 )
-
-func init() {
-	gotenv.Load()
-}
 
 func main() {
 	flag.Usage = usage
