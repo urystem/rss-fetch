@@ -2,8 +2,6 @@ services:
   builder:
     image: golang:1.24.4-alpine3.22
     working_dir: /app
-    env_file:
-      - .env
     volumes:
       - .:/app       # текущая папка хоста монтируется в /app
     command: >
